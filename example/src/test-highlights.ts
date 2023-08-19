@@ -2,7 +2,7 @@ export const testHighlights = {
   "https://arxiv.org/pdf/1708.08021.pdf": [
     {
       content: {
-        text: " Type Checking for JavaScript",
+        text: " Type Checked for JavaScript",
       },
       position: {
         boundingRect: {
@@ -26,7 +26,7 @@ export const testHighlights = {
         pageNumber: 1,
       },
       comment: {
-        text: "Flow or TypeScript?",
+        text: "Flow or Typescript?",
         emoji: "🔥",
       },
       id: "8245652131754351",

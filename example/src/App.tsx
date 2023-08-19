@@ -75,6 +75,11 @@ class App extends Component<{}, State> {
     });
   };
 
+  handleSubmitAnnotations = (annotations: Array<IHighlight>) => {
+  // Do something with the annotations, like submitting to a server or updating state
+  console.log('Submitting annotations:', annotations);
+};
+
   scrollViewerTo = (highlight: any) => {};
 
   scrollToHighlightFromHash = () => {
@@ -141,6 +146,7 @@ class App extends Component<{}, State> {
           highlights={highlights}
           resetHighlights={this.resetHighlights}
           toggleDocument={this.toggleDocument}
+          submitAnnotations={this.handleSubmitAnnotations}
         />
         <div
           style={{

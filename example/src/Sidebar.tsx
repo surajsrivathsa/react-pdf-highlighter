@@ -1,10 +1,11 @@
 import React from "react";
-import type { IHighlight } from "./react-pdf-highlighter";
+import type { Highlight, IHighlight } from "./react-pdf-highlighter";
 
 interface Props {
   highlights: Array<IHighlight>;
   resetHighlights: () => void;
   toggleDocument: () => void;
+  submitAnnotations: (annotations: Array<IHighlight>) => void;
 }
 
 const updateHash = (highlight: IHighlight) => {
@@ -17,7 +18,54 @@ export function Sidebar({
   highlights,
   toggleDocument,
   resetHighlights,
+  submitAnnotations,
 }: Props) {
+
+  // const handleAnnotationsSubmit = () => {
+  //   const annotations: IHighlight[] = [...]; // Your array of IHighlight objects
+  //   submitAnnotations(annotations); // Call the prop function with the annotations
+  // };
+
+  const [selectedHighlight, setSelectedHighlight] = React.useState<IHighlight | null>(null);
+  const [editedComment, setEditedComment] = React.useState<string>("");
+  
+
+  const handleHighlightClick = (highlight: IHighlight) => {
+    setSelectedHighlight(highlight);
+    setEditedComment(highlight.comment.text);
+  };
+
+  const handleRemoveClick = () => {
+    if (selectedHighlight) {
+      const updatedHighlights = highlights.filter(
+        (highlight) => highlight !== selectedHighlight
+      );
+      submitAnnotations(updatedHighlights);
+      setSelectedHighlight(null);
+    }
+  };
+
+  const handleUpdateClick = () => {
+    if (selectedHighlight) {
+      const updatedHighlight = {
+        ...selectedHighlight,
+        comment: { text: editedComment },
+      };
+      const updatedHighlights = highlights.map((highlight) =>
+      highlight === selectedHighlight
+    ? {
+        ...highlight,
+        comment: { text: editedComment, emoji: "" }, // Provide an empty emoji
+      }
+    : highlight
+);
+      submitAnnotations(updatedHighlights);
+      setSelectedHighlight(null);
+    }
+  };
+
+
+
   return (
     <div className="sidebar" style={{ width: "25vw" }}>
       <div className="description" style={{ padding: "1rem" }}>
@@ -70,6 +118,26 @@ export function Sidebar({
           </li>
         ))}
       </ul>
+
+
+       {/* Add buttons for removing and updating */}
+      {selectedHighlight && (
+        <div style={{ padding: "1rem" }}>
+          <button onClick={handleRemoveClick}>Remove Annotation</button>
+          <input
+            type="text"
+            value={editedComment}
+            onChange={(e) => setEditedComment(e.target.value)}
+          />
+          <button onClick={handleUpdateClick}>Update Comment</button>
+        </div>
+      )}
+
+
+
+      <div style={{ padding: "1rem" }}>
+        <button onClick={() => submitAnnotations(highlights)}>Submit Annotations</button>
+      </div>
       <div style={{ padding: "1rem" }}>
         <button onClick={toggleDocument}>Toggle PDF document</button>
       </div>
