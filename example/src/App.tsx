@@ -15,7 +15,7 @@ import { testHighlights as _testHighlights } from "./test-highlights";
 import { Spinner } from "./Spinner";
 import { Sidebar } from "./Sidebar";
 
-import  PDFUploader  from './PDFUploader';
+// import  PDFUploader  from './PDFUploader';
 
 
 import "./style/App.css";
@@ -83,6 +83,9 @@ class App extends Component<{}, State> {
 
   handleSubmitAnnotations = (annotations: Array<IHighlight>) => {
   // Do something with the annotations, like submitting to a server or updating state
+  this.setState({
+      highlights: annotations,
+    });
   console.log('Submitting annotations:', annotations);
   };
 

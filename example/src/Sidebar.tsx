@@ -36,41 +36,52 @@ export function Sidebar({
     }
   };
 
-  const [selectedHighlight, setSelectedHighlight] = React.useState<IHighlight | null>(null);
+  // const [selectedHighlight, setSelectedHighlight] = React.useState<IHighlight | null>(null);
   const [editedComment, setEditedComment] = React.useState<string>("");
   const [selectedHighlightIndex, setSelectedHighlightIndex] = React.useState<number | null>(null);
   
 
   const handleHighlightClick = (index: number) => {
-    setSelectedHighlightIndex(index);
-    setEditedComment(highlights[index].comment.text);
+    if (selectedHighlightIndex === index) {
+      setSelectedHighlightIndex(null);
+    } else {
+      setSelectedHighlightIndex(index);
+      setEditedComment(highlights[index].comment.text);
+    }
   };
 
-  const handleRemoveClick = () => {
+  const handleRemoveClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
     if (selectedHighlightIndex !== null) {
       const updatedHighlights = highlights.filter(
         (_, index) => index !== selectedHighlightIndex
       );
-      
       setSelectedHighlightIndex(null);
       submitAnnotations(updatedHighlights);
     }
   };
 
-  const handleUpdateClick = () => {
+  const handleUpdateClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
     if (selectedHighlightIndex !== null) {
       const updatedHighlights = highlights.map((highlight, index) =>
         index === selectedHighlightIndex
           ? {
               ...highlight,
-              comment: { text: editedComment, emoji: highlight.comment.emoji }, // Keep the existing emoji
+              comment: { text: editedComment, emoji: highlight.comment.emoji },
             }
           : highlight
       );
-      
       setSelectedHighlightIndex(null);
       submitAnnotations(updatedHighlights);
     }
+  };
+  
+
+  // MAKESURE THAT TOGGLE DOESNT GET ATCIVATED WHEN UPDATING TEXT BOX
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    e.stopPropagation(); // Stop event propagation
+    setEditedComment(e.target.value);
   };
 
 
@@ -108,9 +119,12 @@ export function Sidebar({
             <li
               key={index}
               className="sidebar__highlight"
-              onClick={() => {
+              onClick={(e) => {
                 updateHash(highlight);
                 handleHighlightClick(index);
+                if (e.target instanceof HTMLButtonElement || e.target instanceof HTMLInputElement) {
+                  return;
+                }
               }}
             >
               <div>
@@ -134,13 +148,14 @@ export function Sidebar({
               </div>
               {selectedHighlightIndex === index && (
                 <div style={{ padding: "1rem" }}>
-                  <button onClick={handleRemoveClick}>Remove Annotation</button>
+                  <button onClick={(e) => handleRemoveClick(e)}>Remove Annotation</button>
                   <input
                     type="text"
                     value={editedComment}
-                    onChange={(e) => setEditedComment(e.target.value)}
+                    onChange={handleInputChange }
+                    onClick={(e) => e.stopPropagation()} // Stop the click event from bubbling up
                   />
-                  <button onClick={handleUpdateClick}>Update Comment</button>
+                  <button onClick={(e) => handleUpdateClick(e)}>Update Comment</button>
                 </div>
               )}
             </li>
