@@ -25,6 +25,7 @@ const testHighlights: Record<string, Array<IHighlight>> = _testHighlights;
 interface State {
   url: string;
   highlights: Array<IHighlight>;
+  currentPage: number;
 }
 
 const getNextId = () => String(Math.random()).slice(2);
@@ -60,9 +61,11 @@ const initialUrl = searchParams.get("url") || PRIMARY_PDF_URL;
 class App extends Component<{}, State> {
   state = {
     url: initialUrl,
+    currentPage: 1,
     highlights: testHighlights[initialUrl]
       ? [...testHighlights[initialUrl]]
       : [],
+
   };
 
   resetHighlights = () => {
@@ -180,7 +183,7 @@ class App extends Component<{}, State> {
             position: "relative",
           }}
         >
-          <PdfLoader url={url} beforeLoad={<Spinner />}>
+          <PdfLoader url={url} beforeLoad={<Spinner />} currentPage={this.state.currentPage} windowSize={3}>
             {(pdfDocument) => (
               <PdfHighlighter
                 pdfDocument={pdfDocument}
