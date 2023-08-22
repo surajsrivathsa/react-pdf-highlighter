@@ -15,6 +15,9 @@ import { testHighlights as _testHighlights } from "./test-highlights";
 import { Spinner } from "./Spinner";
 import { Sidebar } from "./Sidebar";
 
+import  PDFUploader  from './PDFUploader';
+
+
 import "./style/App.css";
 
 const testHighlights: Record<string, Array<IHighlight>> = _testHighlights;
@@ -51,6 +54,9 @@ const searchParams = new URLSearchParams(document.location.search);
 
 const initialUrl = searchParams.get("url") || PRIMARY_PDF_URL;
 
+
+
+
 class App extends Component<{}, State> {
   state = {
     url: initialUrl,
@@ -78,7 +84,21 @@ class App extends Component<{}, State> {
   handleSubmitAnnotations = (annotations: Array<IHighlight>) => {
   // Do something with the annotations, like submitting to a server or updating state
   console.log('Submitting annotations:', annotations);
-};
+  };
+
+  // Function to handle uploaded PDF
+  uploadPdf = (file: File) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      this.setState({
+        url: e.target?.result as string,
+        highlights: [], // Reset highlights to an empty array
+      });
+    };
+    reader.readAsDataURL(file);
+  };
+
+
 
   scrollViewerTo = (highlight: any) => {};
 
@@ -142,11 +162,13 @@ class App extends Component<{}, State> {
 
     return (
       <div className="App" style={{ display: "flex", height: "100vh" }}>
+        {/* <PDFUploader onFileUpload={this.handleFileUpload} /> */}
         <Sidebar
           highlights={highlights}
           resetHighlights={this.resetHighlights}
           toggleDocument={this.toggleDocument}
           submitAnnotations={this.handleSubmitAnnotations}
+          uploadPdf={this.uploadPdf} 
         />
         <div
           style={{
