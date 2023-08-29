@@ -30,13 +30,11 @@
     "format:check": "prettier --check './**/*.{js,ts,tsx}'",
     "clean": "rm -rf dist"
   },
-  "peerDependencies": {
-    
-  },
   "dependencies": {
     "@vitejs/plugin-react": "^4.0.4",
     "lodash.debounce": "^4.0.8",
-    "pdfjs-dist": "2.16.105",
+    "pdf-lib": "^1.17.1",
+    "pdfjs-dist": "^2.16.105",
     "react-rnd": "^10.1.10",
     "vite-plugin-svgr": "^3.2.0",
     "vite-tsconfig-paths": "^4.2.0"

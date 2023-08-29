@@ -38,15 +38,6 @@ import { HighlightLayer } from "./HighlightLayer";
 
 export type T_ViewportHighlight<T_HT> = { position: Position } & T_HT;
 
-type rect = {
-  top: number;
-  left: number;
-  width: number;
-  height: number;
-  pageNumber: number;
-};
-
-
 interface State<T_HT> {
   ghostHighlight: {
     position: ScaledPosition;
@@ -89,9 +80,6 @@ interface Props<T_HT> {
     transformSelection: () => void
   ) => JSX.Element | null;
   enableAreaSelection: (event: MouseEvent) => boolean;
-  totalPageCount: number;
-  pageSize: number;
-  currentPage: number;
 }
 
 const EMPTY_ID = "empty-id";
@@ -102,9 +90,6 @@ export class PdfHighlighter<T_HT extends IHighlight> extends PureComponent<
 > {
   static defaultProps = {
     pdfScaleValue: "auto",
-    pageSize: 20,
-    totalPageCount: 1,
-    currentPage: 1,
   };
 
   state: State<T_HT> = {
@@ -116,7 +101,6 @@ export class PdfHighlighter<T_HT extends IHighlight> extends PureComponent<
     tip: null,
     tipPosition: null,
     tipChildren: null,
-    
   };
 
   eventBus = new EventBus();
@@ -213,18 +197,7 @@ export class PdfHighlighter<T_HT extends IHighlight> extends PureComponent<
   }
 
   findOrCreateHighlightLayer(page: number) {
-
-    let paginatedPageNumber = null;
-    if (page > this.props.pageSize){
-      paginatedPageNumber = page - this.props.currentPage + 1; // Map to paginated number
-    }
-    else {
-      paginatedPageNumber = page ; // Map to paginated number
-    }
-
-    const { textLayer } = this.viewer.getPageView(paginatedPageNumber - 1) || {};
-
-    //console.log("textLayer: ", textLayer);
+    const { textLayer } = this.viewer.getPageView(page - 1) || {};
 
     if (!textLayer) {
       return null;
@@ -236,45 +209,27 @@ export class PdfHighlighter<T_HT extends IHighlight> extends PureComponent<
     );
   }
 
-  groupHighlightsByPage(highlights: Array<T_HT>, currentPage: number, endPage: number): {
+  groupHighlightsByPage(highlights: Array<T_HT>): {
     [pageNumber: string]: Array<T_HT>;
   } {
     const { ghostHighlight } = this.state;
 
-    // Filter out null or undefined values
-    const allHighlights: T_HT[] = [...highlights, ghostHighlight].filter((x): x is T_HT => Boolean(x));
+    const allHighlights = [...highlights, ghostHighlight].filter(Boolean);
 
     const pageNumbers = new Set<number>();
     for (const highlight of allHighlights) {
-
-      const highlightPage = highlight!.position.pageNumber;
-
-      // Filter out highlights that don't belong to the current page range
-      if (highlightPage < currentPage || highlightPage > endPage) {
-          continue;
-        }
-
       pageNumbers.add(highlight!.position.pageNumber);
-      
       for (const rect of highlight!.position.rects) {
         if (rect.pageNumber) {
-
-          // Again, filter based on current page range
-          if (rect.pageNumber < currentPage || rect.pageNumber > endPage) {
-            continue;
-          }
           pageNumbers.add(rect.pageNumber);
         }
       }
     }
 
     const groupedHighlights = {} as Record<number, any[]>;
-    console.log("highlight pageNumbers: ", pageNumbers, );
 
     for (const pageNumber of pageNumbers) {
-
       groupedHighlights[pageNumber] = groupedHighlights[pageNumber] || [];
-
       for (const highlight of allHighlights) {
         const pageSpecificHighlight = {
           ...highlight,
@@ -287,10 +242,6 @@ export class PdfHighlighter<T_HT extends IHighlight> extends PureComponent<
         };
         let anyRectsOnPage = false;
         for (const rect of highlight!.position.rects) {
-
-          // Assuming rect.pageNumber holds the real page number
-          const realRectPageNumber = rect.pageNumber;
-
           if (
             pageNumber === (rect.pageNumber || highlight!.position.pageNumber)
           ) {
@@ -303,8 +254,6 @@ export class PdfHighlighter<T_HT extends IHighlight> extends PureComponent<
         }
       }
     }
-
-    console.log(" groupedHighlights: ", groupedHighlights);
 
     return groupedHighlights;
   }
@@ -319,8 +268,6 @@ export class PdfHighlighter<T_HT extends IHighlight> extends PureComponent<
       return;
     }
 
-    console.log("showTip: ", highlight.position);
-
     this.setTip(highlight.position, content);
   }
 
@@ -330,15 +277,8 @@ export class PdfHighlighter<T_HT extends IHighlight> extends PureComponent<
     rects,
     usePdfCoordinates,
   }: ScaledPosition): Position {
-    let paginatedPageNumber = null;
-    if (pageNumber > this.props.pageSize){
-      paginatedPageNumber = pageNumber -  this.props.currentPage + 1;
-    }
-    else{
-      paginatedPageNumber = pageNumber;
-    }
-    const viewport = this.viewer.getPageView(paginatedPageNumber - 1).viewport;
-    console.log("scaledPositionToViewport: ", pageNumber);
+    const viewport = this.viewer.getPageView(pageNumber - 1).viewport;
+
     return {
       boundingRect: scaledToViewport(boundingRect, viewport, usePdfCoordinates),
       rects: (rects || []).map((rect) =>
@@ -353,42 +293,17 @@ export class PdfHighlighter<T_HT extends IHighlight> extends PureComponent<
     boundingRect,
     rects,
   }: Position): ScaledPosition {
+    const viewport = this.viewer.getPageView(pageNumber - 1).viewport;
 
-    let paginatedPageNumber = null;
-    if (pageNumber > this.props.pageSize){
-      paginatedPageNumber = pageNumber -  this.props.currentPage + 1;
-    }
-    else{
-      paginatedPageNumber = pageNumber;
-    }
-
-    // console.log("paginatedPageNumber: ", paginatedPageNumber);
-    const viewport = this.viewer.getPageView(paginatedPageNumber - 1).viewport;
-    console.log("viewportPositionToScaled: ", viewportToScaled(boundingRect, viewport), " pageNumber: ", pageNumber);
-
-
-    const updatedRectObjects = rects.map((obj:any) => ({
-        ...obj,
-        pageNumber: obj.pageNumber + this.props.currentPage - 1, // Assuming currentPage starts from 1
-      }));
     return {
       boundingRect: viewportToScaled(boundingRect, viewport),
-      rects: (updatedRectObjects || []).map((rect) => viewportToScaled(rect, viewport)),
+      rects: (rects || []).map((rect) => viewportToScaled(rect, viewport)),
       pageNumber,
     };
   }
 
   screenshot(position: LTWH, pageNumber: number) {
-
-    let paginatedPageNumber = null;
-    if (pageNumber > this.props.pageSize){
-      paginatedPageNumber = pageNumber -  this.props.currentPage + 1;
-    }
-    else{
-      paginatedPageNumber = pageNumber;
-    }
-
-    const canvas = this.viewer.getPageView(paginatedPageNumber - 1).canvas;
+    const canvas = this.viewer.getPageView(pageNumber - 1).canvas;
 
     return getAreaAsPng(canvas, position);
   }
@@ -398,7 +313,7 @@ export class PdfHighlighter<T_HT extends IHighlight> extends PureComponent<
       tipPosition: null,
       tipChildren: null,
     });
-    console.log("hide tipposition");
+
     this.setState({ ghostHighlight: null, tip: null }, () =>
       this.renderHighlightLayers()
     );
@@ -416,20 +331,10 @@ export class PdfHighlighter<T_HT extends IHighlight> extends PureComponent<
     if (!tipPosition) return null;
 
     const { boundingRect, pageNumber } = tipPosition;
-
-    let  paginatedPageNumber =  null;
-
-    if (pageNumber > this.props.pageSize){
-      paginatedPageNumber =  pageNumber - this.props.currentPage + 1;
-    }
-    else{
-      paginatedPageNumber =  pageNumber ;
-    }
-    
     const page = {
-      node: this.viewer.getPageView((paginatedPageNumber || boundingRect.pageNumber || pageNumber) - 1)
+      node: this.viewer.getPageView((boundingRect.pageNumber || pageNumber) - 1)
         .div,
-      pageNumber: paginatedPageNumber || boundingRect.pageNumber || pageNumber,
+      pageNumber: boundingRect.pageNumber || pageNumber,
     };
 
     const pageBoundingClientRect = page.node.getBoundingClientRect();
@@ -443,15 +348,8 @@ export class PdfHighlighter<T_HT extends IHighlight> extends PureComponent<
       width: pageBoundingClientRect.width,
       x: pageBoundingClientRect.x,
       y: pageBoundingClientRect.y,
-      pageNumber: page.pageNumber ,
+      pageNumber: page.pageNumber,
     };
-
-    if (pageBoundingRect.pageNumber < this.props.pageSize && 
-        this.props.currentPage > this.props.pageSize){
-          pageBoundingRect.pageNumber = pageBoundingRect.pageNumber + this.props.currentPage - 1;
-        }
-
-    console.log("renderTip: ", tipPosition, " pageBoundingRect: ", pageBoundingRect);
 
     return (
       <TipContainer
@@ -478,21 +376,12 @@ export class PdfHighlighter<T_HT extends IHighlight> extends PureComponent<
 
     this.viewer.container.removeEventListener("scroll", this.onScroll);
 
-    let  paginatedPageNumber =  null;
-
-    if (pageNumber > this.props.pageSize){
-      paginatedPageNumber =  pageNumber - this.props.currentPage + 1;
-    }
-    else{
-      paginatedPageNumber =  pageNumber ;
-    }
-    console.log("scrollTo: ", pageNumber, paginatedPageNumber);
-    const pageViewport = this.viewer.getPageView(paginatedPageNumber - 1).viewport;
+    const pageViewport = this.viewer.getPageView(pageNumber - 1).viewport;
 
     const scrollMargin = 10;
 
     this.viewer.scrollPageIntoView({
-      pageNumber: paginatedPageNumber,
+      pageNumber,
       destArray: [
         null,
         { name: "XYZ" },
@@ -591,7 +480,6 @@ export class PdfHighlighter<T_HT extends IHighlight> extends PureComponent<
   };
 
   afterSelection = () => {
-
     const { onSelectionFinished } = this.props;
 
     const { isCollapsed, range } = this.state;
@@ -600,28 +488,24 @@ export class PdfHighlighter<T_HT extends IHighlight> extends PureComponent<
       return;
     }
 
-    const pages = getPagesFromRange(range); //pdfjs method that returns elements for paginated page pdf ranges
+    const pages = getPagesFromRange(range);
 
     if (!pages || pages.length === 0) {
       return;
     }
 
     const rects = getClientRects(range, pages);
-    console.log("pages: ", pages, " afterselection-rects: ", rects);
+
     if (rects.length === 0) {
       return;
     }
 
-    console.log("pagerange-afterselection: ", pages, " rects-afterselection: ", rects);
-
-    const realPageNumber = pages[0].number + this.props.currentPage - 1;
-    let boundingRect = getBoundingRect(rects);
-    boundingRect.pageNumber = realPageNumber; // use real page number rather paginatyed ones
+    const boundingRect = getBoundingRect(rects);
 
     const viewportPosition: Position = {
       boundingRect,
       rects,
-      pageNumber: realPageNumber //pages[0].number 
+      pageNumber: pages[0].number,
     };
 
     const content = {
@@ -644,8 +528,6 @@ export class PdfHighlighter<T_HT extends IHighlight> extends PureComponent<
           )
       )
     );
-
-    console.log("onselectionfinished: ", scaledPosition);
   };
 
   debouncedAfterSelection: () => void = debounce(this.afterSelection, 500);
@@ -691,31 +573,22 @@ export class PdfHighlighter<T_HT extends IHighlight> extends PureComponent<
               }
               onSelection={(startTarget, boundingRect, resetSelection) => {
                 const page = getPageFromElement(startTarget);
-                console.log("startTarget: ", startTarget,  " boundingRect: ", boundingRect);
 
                 if (!page) {
                   return;
-                }
-
-                let paginatedPageNumber = null;
-                if (page.number > this.props.pageSize){
-                  paginatedPageNumber = page.number - this.props.currentPage + 1;
-                }
-                else{
-                  paginatedPageNumber = page.number
                 }
 
                 const pageBoundingRect = {
                   ...boundingRect,
                   top: boundingRect.top - page.node.offsetTop,
                   left: boundingRect.left - page.node.offsetLeft,
-                  pageNumber: page.number + this.props.currentPage - 1,
+                  pageNumber: page.number,
                 };
 
                 const viewportPosition = {
                   boundingRect: pageBoundingRect,
-                  rects: [pageBoundingRect],
-                  pageNumber: page.number + this.props.currentPage - 1,
+                  rects: [],
+                  pageNumber: page.number,
                 };
 
                 const scaledPosition =
@@ -725,9 +598,6 @@ export class PdfHighlighter<T_HT extends IHighlight> extends PureComponent<
                   pageBoundingRect,
                   pageBoundingRect.pageNumber
                 );
-
-                console.log("Debug: scaledPosition in onSelection", scaledPosition);
-                console.log("Debug: image in onSelection", image);
 
                 this.setTip(
                   viewportPosition,
@@ -761,21 +631,9 @@ export class PdfHighlighter<T_HT extends IHighlight> extends PureComponent<
   }
 
   private renderHighlightLayers() {
-    const { pdfDocument,  currentPage, pageSize, totalPageCount  } = this.props;
-
-    // Calculate the end page for the current batch
-    const endPage = Math.min(currentPage + pageSize - 1, totalPageCount);
-
-    console.log("highlight layer - currentPage: ", currentPage, " endPage: ", endPage);
-
-    console.log("highlightRoots: ", this.highlightRoots);
-    for (let pageNumber =  currentPage; pageNumber <= currentPage+pageSize; pageNumber++) {
-
-      const cutPageNumber = pageNumber - currentPage + 1;
-      
+    const { pdfDocument } = this.props;
+    for (let pageNumber = 1; pageNumber <= pdfDocument.numPages; pageNumber++) {
       const highlightRoot = this.highlightRoots[pageNumber];
-
-      // console.log("highlightRoot: ", highlightRoot, " cutPageNumber: ", cutPageNumber);
       /** Need to check if container is still attached to the DOM as PDF.js can unload pages. */
       if (highlightRoot && highlightRoot.container.isConnected) {
         this.renderHighlightLayer(highlightRoot.reactRoot, pageNumber);
@@ -794,18 +652,12 @@ export class PdfHighlighter<T_HT extends IHighlight> extends PureComponent<
   }
 
   private renderHighlightLayer(root: Root, pageNumber: number) {
-    const { highlightTransform, highlights, currentPage, pageSize, totalPageCount } = this.props;
+    const { highlightTransform, highlights } = this.props;
     const { tip, scrolledToHighlightId } = this.state;
-
-    // Calculate the end page for the current batch
-    const realPageNumber = pageNumber ;
-    const paginatedPageNumber = pageNumber - currentPage + 1;
-    const endPage = Math.min(currentPage + pageSize - 1, totalPageCount);
-
     root.render(
       <HighlightLayer
-        highlightsByPage={this.groupHighlightsByPage(highlights, currentPage, endPage)}
-        pageNumber={paginatedPageNumber.toString()}
+        highlightsByPage={this.groupHighlightsByPage(highlights)}
+        pageNumber={pageNumber.toString()}
         scrolledToHighlightId={scrolledToHighlightId}
         highlightTransform={highlightTransform}
         tip={tip}
@@ -815,9 +667,6 @@ export class PdfHighlighter<T_HT extends IHighlight> extends PureComponent<
         screenshot={this.screenshot.bind(this)}
         showTip={this.showTip.bind(this)}
         setState={this.setState.bind(this)}
-        currentPage={currentPage}
-        realPageNumber={realPageNumber}
-        pageSize={pageSize}
       />
     );
   }

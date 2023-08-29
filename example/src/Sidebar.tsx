@@ -7,7 +7,17 @@ interface Props {
   toggleDocument: () => void;
   submitAnnotations: (annotations: Array<IHighlight>) => void;
   uploadPdf: (file: File) => void; // Adding this to handle file upload
+
+  onNextPageBatch: () => void; // New prop to handle next page batch
+  onPrevPageBatch: () => void; // New prop to handle previous page batch
+  disableNext: boolean; // New prop to disable the "Next" button
+  disablePrev: boolean; // New prop to disable the "Prev" button
+  currentPage: number;
+  pageSize: number;
+
+  setPageBatch: (batchNumber: number) => void; // New prop to set the current batch number
 }
+
 
 const updateHash = (highlight: IHighlight) => {
   document.location.hash = `highlight-${highlight.id}`;
@@ -21,6 +31,16 @@ export function Sidebar({
   resetHighlights,
   submitAnnotations,
   uploadPdf, // Adding this to handle file upload
+
+  onNextPageBatch,
+  onPrevPageBatch,
+  disableNext,
+  disablePrev,
+
+  currentPage,
+  pageSize,
+
+  setPageBatch
 }: Props) {
 
   // const handleAnnotationsSubmit = () => {
@@ -36,6 +56,11 @@ export function Sidebar({
     }
   };
 
+  const calculateBatchNumber = (pageNumber: number): number => {
+    return Math.ceil(pageNumber / pageSize) ;
+  };
+
+
   // const [selectedHighlight, setSelectedHighlight] = React.useState<IHighlight | null>(null);
   const [editedComment, setEditedComment] = React.useState<string>("");
   const [selectedHighlightIndex, setSelectedHighlightIndex] = React.useState<number | null>(null);
@@ -45,8 +70,20 @@ export function Sidebar({
     if (selectedHighlightIndex === index) {
       setSelectedHighlightIndex(null);
     } else {
+      console.log("handleHighlightClick-index: ", index, " handleHighlightClick: ", highlights[index]);
       setSelectedHighlightIndex(index);
       setEditedComment(highlights[index].comment.text);
+
+      // Calculate which batch this page is in
+      // This is pseudo-code; you'll need to replace it with your actual batch calculation
+      const pageNumber = highlights[index].position.pageNumber;
+      const batchNumber = calculateBatchNumber(pageNumber); 
+
+        // Navigate to the correct batch
+      setPageBatch(batchNumber);
+
+      // Now update the hash to scroll to the highlight
+      updateHash(highlights[index]);
     }
   };
 
@@ -173,7 +210,16 @@ export function Sidebar({
         <div style={{ padding: "1rem" }}>
           <button onClick={resetHighlights}>Reset highlights</button>
         </div>
+
       ) : null}
+      <div style={{ padding: "1rem" }}>
+          <button onClick={onPrevPageBatch} disabled={disablePrev}>
+            Back
+          </button>
+          <button onClick={onNextPageBatch} disabled={disableNext}>
+            Forward
+          </button>
+      </div>
       
 
       {/* handle pdf */} 

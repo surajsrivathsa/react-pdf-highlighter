@@ -1,14 +1,8 @@
-import React, { Component,  } from "react";
+import React, { Component } from "react";
 
 import { getDocument, GlobalWorkerOptions } from "pdfjs-dist/legacy/build/pdf";
-import type { PDFDocumentProxy, PDFPageProxy } from "pdfjs-dist";
-import PdfPage  from "./PDFPageComponent"
-
-// Add these imports at the top
-import { throttle } from 'lodash';
-import { url } from "inspector";
-
-const PAGE_HEIGHT = 800; // Replace with the actual height of a page in your render
+import type { PDFDocumentProxy } from "pdfjs-dist";
+import { PDFDocument } from 'pdf-lib';
 
 interface Props {
   /** See `GlobalWorkerOptionsType`. */
@@ -17,29 +11,27 @@ interface Props {
   url: string;
   beforeLoad: JSX.Element;
   errorMessage?: JSX.Element;
+  //children: (pdfDocument: PDFDocumentProxy, pageNum: number) => JSX.Element; // changed it to suit our needs for paginations
   children: (pdfDocument: PDFDocumentProxy) => JSX.Element;
   onError?: (error: Error) => void;
   cMapUrl?: string;
   cMapPacked?: boolean;
+
+  // added below as new props
   currentPage: number;
-  windowSize: number; // Number of pages to load before and after the current page
+  pageSize: number;
+  onLoad: (totalPages: number) => void;  // Modify this line
 }
 
 interface State {
   pdfDocument: PDFDocumentProxy | null;
   error: Error | null;
-  pages: PDFPageProxy[] | null;
-  currentPage: number;
-  windowSize: number;
 }
 
 export class PdfLoader extends Component<Props, State> {
   state: State = {
     pdfDocument: null,
     error: null,
-    pages: null,
-    currentPage: 1,
-    windowSize: 3
   };
 
   static defaultProps = {
@@ -48,23 +40,24 @@ export class PdfLoader extends Component<Props, State> {
 
   documentRef = React.createRef<HTMLElement>();
 
-  // Add scroll event listener in componentDidMount
   componentDidMount() {
-    this.load(this.props.currentPage, this.props.windowSize);
-    window.addEventListener('scroll', this.handleScroll);
+    this.load();
   }
 
-  // Remove scroll event listener in componentWillUnmount
   componentWillUnmount() {
-    window.removeEventListener('scroll', this.handleScroll);
+    const { pdfDocument: discardedDocument } = this.state;
+    if (discardedDocument) {
+      discardedDocument.destroy();
+    }
   }
 
-  // Update componentDidUpdate to check for changes in currentPage and windowSize
-  componentDidUpdate(prevProps: Props) {
-    if (this.props.url !== prevProps.url ||
-        this.props.currentPage !== prevProps.currentPage ||
-        this.props.windowSize !== prevProps.windowSize) {
-      this.load(this.props.currentPage, this.props.windowSize);
+  async componentDidUpdate(prevProps: Props) {
+    if (this.props.url !== prevProps.url) {
+      this.load();
+    }
+
+    if (this.props.currentPage !== prevProps.currentPage || this.props.pageSize !== prevProps.pageSize) {
+      await this.load();  // refetch pages
     }
   }
 
@@ -78,97 +71,90 @@ export class PdfLoader extends Component<Props, State> {
     this.setState({ pdfDocument: null, error });
   }
 
-  load(currentPage: number, windowSize: number) {
+  load() {
     const { ownerDocument = document } = this.documentRef.current || {};
     const { url, cMapUrl, cMapPacked, workerSrc } = this.props;
     const { pdfDocument: discardedDocument } = this.state;
     this.setState({ pdfDocument: null, error: null });
 
+    const startPage = this.props.currentPage;
+    
+
     if (typeof workerSrc === "string") {
       GlobalWorkerOptions.workerSrc = workerSrc;
     }
 
-    // for limited pdf rendering
-    const startPage = Math.max(currentPage - windowSize, 1);
-    const endPage = currentPage + windowSize;
-
     Promise.resolve()
-      .then(() => discardedDocument && discardedDocument.destroy())
-      .then(() => {
-        if (!url) {
-          return;
-        }
+    .then(() => discardedDocument && discardedDocument.destroy())
+    .then(async () => {
+      if (!url) {
+        return;
+      }
 
-        return getDocument({
-          ...this.props,
-          ownerDocument,
-          cMapUrl,
-          cMapPacked,
-        }).promise.then((pdfDocument) => {
-          this.setState({ pdfDocument });
+      // Load existing PDF with pdf-lib
+      const pdfBytes = await fetch(url).then(res => res.arrayBuffer());
+      const pdfDoc = await PDFDocument.load(pdfBytes);
+      const totalNumPages = pdfDoc.getPageCount();
 
-          // Load the specific window of pages - below block added by suraj
-          const startPage = Math.max(this.props.currentPage - this.props.windowSize, 1);
-          const endPage = this.props.currentPage + this.props.windowSize;
+      const endPage = Math.min(this.props.currentPage + this.props.pageSize - 1, totalNumPages);
+      
+      // Extract only specified pages
+      const pageIndices = Array.from({ length: endPage - startPage + 1 }, (_, i) => i + startPage-1);
 
-          const pages = [];
-          for (let i = startPage; i <= endPage; i++) {
-            pages.push(pdfDocument.getPage(i));
-          }
-
-          Promise.all(pages).then((loadedPages) => {
-            this.setState({ pages: loadedPages });
-          });
-
-
-        });
-      })
-      .catch((e) => this.componentDidCatch(e));
-  }
-
-  // Add a method to handle scroll
-  handleScroll = throttle(() => {
-    const scrollPosition = window.scrollY;
-    const currentPage = Math.ceil(scrollPosition / PAGE_HEIGHT);
-
-    if (this.state.currentPage !== currentPage) {
-      this.setState({ currentPage }, () => {
-        this.load(currentPage, this.props.windowSize);
-      });
-    }
-  }, 300);
-
-  renderPages() {
-    const { pdfDocument, currentPage, windowSize, pages } = this.state;
-
-    if (!pdfDocument) return null;
-
-    if (!pages) return null;
-
-    const totalPages = pdfDocument.numPages;
-    const startPage = Math.max(currentPage - windowSize, 1);
-    const endPage = Math.min(currentPage + windowSize, totalPages);
-
-    console.log(totalPages, startPage, endPage);
-
-    return pages.map((page, index) => (
-      <PdfPage key={index} page={page} />
-    ));
+      // console.log("pageIndices: ", pageIndices, " startPage: ", startPage, " endPage: ", endPage);
+      const newPdfDoc = await PDFDocument.create();
+      const copiedPages = await newPdfDoc.copyPages(pdfDoc, pageIndices);
+      copiedPages.forEach(page => newPdfDoc.addPage(page));
+      
+      const newPdfBytes = await newPdfDoc.save();
+      
+      // Load the new PDF with PDF.js
+      const newPdfDocument = await getDocument({
+        data: newPdfBytes,
+        ownerDocument,
+        cMapUrl,
+        cMapPacked,
+      }).promise;
+      
+      this.setState({ pdfDocument: newPdfDocument });
+      this.props.onLoad(totalNumPages);  // Here totalNumPages is from original document
+    })
+    .catch((e) => this.componentDidCatch(e));
   }
 
   render() {
-    const { children, beforeLoad } = this.props;
-    const { pdfDocument, error, } = this.state;
-    return (
-      <>
-        <span ref={this.documentRef} />
-        {error
-          ? this.renderError()
-          : !pdfDocument || !children
-          ? beforeLoad
-          : this.renderPages()}
-      </>
-    );
+    const { children, beforeLoad, currentPage, pageSize } = this.props;
+    const { pdfDocument, error } = this.state;
+
+    const endPage = currentPage + pageSize - 1;
+
+    // find last page
+    // if (pdfDocument !== null){
+    //   const endPage = Math.min(currentPage + pageSize - 1, pdfDocument.numPages);
+    // }
+    // else{
+    //   const endPage = Math.min(currentPage + pageSize - 1, 1000000);
+    // }
+
+    console.log("currentPage: ", currentPage, " endPage: ", endPage, " pageSize: ", pageSize);
+    
+
+     return (
+        <>
+          <span ref={this.documentRef} />
+          {error
+            ? this.renderError()
+            : !pdfDocument
+            ? beforeLoad
+            : children(pdfDocument)
+            // : Array.from(new Array(endPage - currentPage + 1), (el, index) => currentPage + index).map((pageNum) => (
+            //     <React.Fragment key={pageNum}>
+            //       {this.props.children(pdfDocument, pageNum)}
+            //     </React.Fragment>
+            //   ))
+          }
+        </>
+      );
   }
 
   renderError() {

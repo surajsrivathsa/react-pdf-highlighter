@@ -32,9 +32,13 @@ interface HighlightLayerProps<T_HT> {
   screenshot: (position: LTWH, pageNumber: number) => string;
   showTip: (highlight: any, content: JSX.Element) => void;
   setState: (state: any) => void;
+  currentPage: number;
+  realPageNumber: number;
+  pageSize: number;
+
 }
 
-export function HighlightLayer<T_HT extends IHighlight>({
+export function HighlightLayer<T_HT extends IHighlight>(this: any, {
   highlightsByPage,
   scaledPositionToViewport,
   pageNumber,
@@ -46,8 +50,13 @@ export function HighlightLayer<T_HT extends IHighlight>({
   screenshot,
   showTip,
   setState,
-}: HighlightLayerProps<T_HT>) {
-  const currentHighlights = highlightsByPage[String(pageNumber)] || [];
+  currentPage,
+  realPageNumber,
+  pageSize,
+  }: HighlightLayerProps<T_HT>) {
+  
+  const currentHighlights = highlightsByPage[String(realPageNumber)] || [];
+  console.log("found highlights-HighlightLayer: ", currentHighlights);
   return (
     <div>
       {currentHighlights.map(({ position, id, ...highlight }, index) => {
@@ -76,8 +85,10 @@ export function HighlightLayer<T_HT extends IHighlight>({
           },
           hideTipAndSelection,
           (rect) => {
+            const cutPageNumber = this.props.realPageNumber - currentPage + 1;
+            
             const viewport = viewer.getPageView(
-              (rect.pageNumber || parseInt(pageNumber)) - 1
+              (cutPageNumber || rect.pageNumber || parseInt(pageNumber)) - 1
             ).viewport;
 
             return viewportToScaled(rect, viewport);

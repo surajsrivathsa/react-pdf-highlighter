@@ -31,6 +31,7 @@ export class Highlight extends Component<Props> {
     } = this.props;
 
     const { rects, boundingRect } = position;
+    console.log("highlight-rects: ", rects, " boundicngRect: ", boundingRect);
 
     return (
       <div
