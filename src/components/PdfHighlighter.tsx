@@ -216,7 +216,7 @@ export class PdfHighlighter<T_HT extends IHighlight> extends PureComponent<
 
     const { textLayer } = this.viewer.getPageView(paginatedPageNumber - 1) || {};
 
-    //console.log("textLayer: ", textLayer);
+    //// console.log("textLayer: ", textLayer);
 
     if (!textLayer) {
       return null;
@@ -261,7 +261,7 @@ export class PdfHighlighter<T_HT extends IHighlight> extends PureComponent<
     }
 
     const groupedHighlights = {} as Record<number, any[]>;
-    console.log("highlight pageNumbers: ", pageNumbers, );
+    // console.log("highlight pageNumbers: ", pageNumbers, );
 
     for (const pageNumber of pageNumbers) {
 
@@ -296,7 +296,7 @@ export class PdfHighlighter<T_HT extends IHighlight> extends PureComponent<
       }
     }
 
-    console.log(" groupedHighlights: ", groupedHighlights);
+    // console.log(" groupedHighlights: ", groupedHighlights);
 
     return groupedHighlights;
   }
@@ -311,7 +311,7 @@ export class PdfHighlighter<T_HT extends IHighlight> extends PureComponent<
       return;
     }
 
-    console.log("showTip: ", highlight.position);
+    // console.log("showTip: ", highlight.position);
 
     this.setTip(highlight.position, content);
   }
@@ -330,7 +330,7 @@ export class PdfHighlighter<T_HT extends IHighlight> extends PureComponent<
       paginatedPageNumber = pageNumber;
     }
     const viewport = this.viewer.getPageView(paginatedPageNumber - 1).viewport;
-    console.log("scaledPositionToViewport: ", pageNumber);
+    // console.log("scaledPositionToViewport: ", pageNumber);
     return {
       boundingRect: scaledToViewport(boundingRect, viewport, usePdfCoordinates),
       rects: (rects || []).map((rect) =>
@@ -354,9 +354,9 @@ export class PdfHighlighter<T_HT extends IHighlight> extends PureComponent<
       paginatedPageNumber = pageNumber;
     }
 
-    // console.log("paginatedPageNumber: ", paginatedPageNumber);
+    // // console.log("paginatedPageNumber: ", paginatedPageNumber);
     const viewport = this.viewer.getPageView(paginatedPageNumber - 1).viewport;
-    console.log("viewportPositionToScaled: ", viewportToScaled(boundingRect, viewport), " pageNumber: ", pageNumber);
+    // console.log("viewportPositionToScaled: ", viewportToScaled(boundingRect, viewport), " pageNumber: ", pageNumber);
 
 
     const updatedRectObjects = rects.map((obj:any) => ({
@@ -390,7 +390,7 @@ export class PdfHighlighter<T_HT extends IHighlight> extends PureComponent<
       tipPosition: null,
       tipChildren: null,
     });
-    console.log("hide tipposition");
+    // console.log("hide tipposition");
     this.setState({ ghostHighlight: null, tip: null }, () =>
       this.renderHighlightLayers()
     );
@@ -443,7 +443,7 @@ export class PdfHighlighter<T_HT extends IHighlight> extends PureComponent<
           pageBoundingRect.pageNumber = pageBoundingRect.pageNumber + this.props.currentPage - 1;
         }
 
-    console.log("renderTip: ", tipPosition, " pageBoundingRect: ", pageBoundingRect);
+    // console.log("renderTip: ", tipPosition, " pageBoundingRect: ", pageBoundingRect);
 
     return (
       <TipContainer
@@ -478,7 +478,7 @@ export class PdfHighlighter<T_HT extends IHighlight> extends PureComponent<
     else{
       paginatedPageNumber =  pageNumber ;
     }
-    console.log("scrollTo: ", pageNumber, paginatedPageNumber);
+    // console.log("scrollTo: ", pageNumber, paginatedPageNumber);
     const pageViewport = this.viewer.getPageView(paginatedPageNumber - 1).viewport;
 
     const scrollMargin = 10;
@@ -599,12 +599,12 @@ export class PdfHighlighter<T_HT extends IHighlight> extends PureComponent<
     }
 
     const rects = getClientRects(range, pages);
-    console.log("pages: ", pages, " afterselection-rects: ", rects);
+    // console.log("pages: ", pages, " afterselection-rects: ", rects);
     if (rects.length === 0) {
       return;
     }
 
-    console.log("pagerange-afterselection: ", pages, " rects-afterselection: ", rects);
+    // console.log("pagerange-afterselection: ", pages, " rects-afterselection: ", rects);
 
     const realPageNumber = pages[0].number + this.props.currentPage - 1;
     let boundingRect = getBoundingRect(rects);
@@ -637,7 +637,7 @@ export class PdfHighlighter<T_HT extends IHighlight> extends PureComponent<
       )
     );
 
-    console.log("onselectionfinished: ", scaledPosition);
+    // console.log("onselectionfinished: ", scaledPosition);
   };
 
   debouncedAfterSelection: () => void = debounce(this.afterSelection, 500);
@@ -683,7 +683,7 @@ export class PdfHighlighter<T_HT extends IHighlight> extends PureComponent<
               }
               onSelection={(startTarget, boundingRect, resetSelection) => {
                 const page = getPageFromElement(startTarget);
-                console.log("startTarget: ", startTarget,  " boundingRect: ", boundingRect);
+                // console.log("startTarget: ", startTarget,  " boundingRect: ", boundingRect);
 
                 if (!page) {
                   return;
@@ -718,8 +718,8 @@ export class PdfHighlighter<T_HT extends IHighlight> extends PureComponent<
                   pageBoundingRect.pageNumber
                 );
 
-                console.log("Debug: scaledPosition in onSelection", scaledPosition);
-                console.log("Debug: image in onSelection", image);
+                // console.log("Debug: scaledPosition in onSelection", scaledPosition);
+                // console.log("Debug: image in onSelection", image);
 
                 this.setTip(
                   viewportPosition,
@@ -728,7 +728,7 @@ export class PdfHighlighter<T_HT extends IHighlight> extends PureComponent<
                     { image },
                     () => this.hideTipAndSelection(),
                     () => {
-                      console.log("setting ghost highlight", scaledPosition);
+                      // console.log("setting ghost highlight", scaledPosition);
                       this.setState(
                         {
                           ghostHighlight: {
@@ -758,16 +758,16 @@ export class PdfHighlighter<T_HT extends IHighlight> extends PureComponent<
     // Calculate the end page for the current batch
     const endPage = Math.min(currentPage + pageSize - 1, totalPageCount);
 
-    console.log("highlight layer - currentPage: ", currentPage, " endPage: ", endPage);
+    // console.log("highlight layer - currentPage: ", currentPage, " endPage: ", endPage);
 
-    console.log("highlightRoots: ", this.highlightRoots);
+    // console.log("highlightRoots: ", this.highlightRoots);
     for (let pageNumber =  currentPage; pageNumber <= currentPage+pageSize; pageNumber++) {
 
       // const cutPageNumber = pageNumber - currentPage + 1;
       
       const highlightRoot = this.highlightRoots[pageNumber];
 
-      // console.log("highlightRoot: ", highlightRoot, " cutPageNumber: ", cutPageNumber);
+      // // console.log("highlightRoot: ", highlightRoot, " cutPageNumber: ", cutPageNumber);
       /** Need to check if container is still attached to the DOM as PDF.js can unload pages. */
       if (highlightRoot && highlightRoot.container.isConnected) {
         this.renderHighlightLayer(highlightRoot.reactRoot, pageNumber);

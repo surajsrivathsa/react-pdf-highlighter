@@ -70,7 +70,7 @@ export function Sidebar({
     if (selectedHighlightIndex === index) {
       setSelectedHighlightIndex(null);
     } else {
-      console.log("handleHighlightClick-index: ", index, " handleHighlightClick: ", highlights[index]);
+      // console.log("handleHighlightClick-index: ", index, " handleHighlightClick: ", highlights[index]);
       setSelectedHighlightIndex(index);
       setEditedComment(highlights[index].comment.text);
 

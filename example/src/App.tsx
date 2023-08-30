@@ -87,7 +87,7 @@ class App extends Component<{}, State> {
   setPageBatch = (batchNumber: number, batchSize: number = this.state.pageSize) => {
     const newCurrentPage = ((batchNumber - 1) * batchSize) + 1;
 
-    console.log("newCurrentPage: ", newCurrentPage);
+    // console.log("newCurrentPage: ", newCurrentPage);
     this.setState({ 
       currentPage: newCurrentPage,
       currentBatch: batchNumber, // Update the current batch as well
@@ -211,7 +211,7 @@ class App extends Component<{}, State> {
 
   render() {
     const { url, highlights, currentPage, pageSize, totalPageCount  } = this.state;
-    // console.log("changed  url ", url, " pageSize: ", pageSize);
+    // // console.log("changed  url ", url, " pageSize: ", pageSize);
 
     return (
       <div className="App" style={{ display: "flex", height: "100vh" }}>
@@ -245,7 +245,7 @@ class App extends Component<{}, State> {
               const currentHighlights = highlights.filter(
                     highlight => highlight.position.pageNumber >= currentPage && highlight.position.pageNumber <= currentPage + pageSize - 1
                     );
-              console.log("currentHighlights: ", currentHighlights);
+              // console.log("currentHighlights: ", currentHighlights);
               return (
               <PdfHighlighter
                 totalPageCount={totalPageCount}
@@ -287,7 +287,7 @@ class App extends Component<{}, State> {
                     highlight.content && highlight.content.image
                   );
 
-                  console.log("isTextHighlight: ", isTextHighlight, " highlight.position: ", highlight.position);
+                  // console.log("isTextHighlight: ", isTextHighlight, " highlight.position: ", highlight.position);
 
                   const component = isTextHighlight ? (
                     <Highlight
@@ -309,7 +309,7 @@ class App extends Component<{}, State> {
                     />
                   );
 
-                  console.log("highlightTransform-highlight: ", highlight, " isTextHighlight: ", isTextHighlight);
+                  // console.log("highlightTransform-highlight: ", highlight, " isTextHighlight: ", isTextHighlight);
 
                   return (
                     <Popup
@@ -341,7 +341,7 @@ export default App;
 
  // render() {
   //   const { url, highlights } = this.state;
-  //   console.log("changed  url ", url);
+  //   // console.log("changed  url ", url);
 
   //   return (
   //     <div className="App" style={{ display: "flex", height: "100vh" }}>

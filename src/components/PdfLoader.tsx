@@ -101,7 +101,7 @@ export class PdfLoader extends Component<Props, State> {
       // Extract only specified pages
       const pageIndices = Array.from({ length: endPage - startPage + 1 }, (_, i) => i + startPage-1);
 
-      // console.log("pageIndices: ", pageIndices, " startPage: ", startPage, " endPage: ", endPage);
+      // // console.log("pageIndices: ", pageIndices, " startPage: ", startPage, " endPage: ", endPage);
       const newPdfDoc = await PDFDocument.create();
       const copiedPages = await newPdfDoc.copyPages(pdfDoc, pageIndices);
       copiedPages.forEach(page => newPdfDoc.addPage(page));
@@ -136,7 +136,7 @@ export class PdfLoader extends Component<Props, State> {
     //   const endPage = Math.min(currentPage + pageSize - 1, 1000000);
     // }
 
-    console.log("currentPage: ", currentPage, " endPage: ", endPage, " pageSize: ", pageSize);
+    // console.log("currentPage: ", currentPage, " endPage: ", endPage, " pageSize: ", pageSize);
     
 
      return (
