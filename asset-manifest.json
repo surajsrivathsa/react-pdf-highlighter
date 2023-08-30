@@ -1,0 +1,11 @@
+{
+  "files": {
+    "main.css": "/react-pdf-highlighter/static/css/main.67b0dc06.css",
+    "main.js": "/react-pdf-highlighter/static/js/main.73a988a2.js",
+    "index.html": "/react-pdf-highlighter/index.html"
+  },
+  "entrypoints": [
+    "static/css/main.67b0dc06.css",
+    "static/js/main.73a988a2.js"
+  ]
+}
