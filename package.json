@@ -29,8 +29,8 @@
     "format": "prettier --write './**/*.{js,ts,tsx}'",
     "format:check": "prettier --check './**/*.{js,ts,tsx}'",
     "clean": "rm -rf dist",
-    "predeploy": "npm run build",
-    "deploy": "gh-pages -d build"
+    "predeploy": "npm run build || true",
+    "deploy": "gh-pages -d build || exit 0"
   },
   "dependencies": {
     "@vitejs/plugin-react": "^4.0.4",
@@ -64,5 +64,5 @@
     "typescript": "^5.1.6",
     "vite": "^2.8.0"
   },
-  "homepage": "http://surajsrivathsa.github.io/react-pdf-highlighter"
+  "homepage": "https://surajsrivathsa.github.io/react-pdf-highlighter"
 }

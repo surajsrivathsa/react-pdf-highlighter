@@ -38,14 +38,6 @@ import { HighlightLayer } from "./HighlightLayer";
 
 export type T_ViewportHighlight<T_HT> = { position: Position } & T_HT;
 
-type rect = {
-  top: number;
-  left: number;
-  width: number;
-  height: number;
-  pageNumber: number;
-};
-
 
 interface State<T_HT> {
   ghostHighlight: {
@@ -289,7 +281,7 @@ export class PdfHighlighter<T_HT extends IHighlight> extends PureComponent<
         for (const rect of highlight!.position.rects) {
 
           // Assuming rect.pageNumber holds the real page number
-          const realRectPageNumber = rect.pageNumber;
+          // const realRectPageNumber = rect.pageNumber;
 
           if (
             pageNumber === (rect.pageNumber || highlight!.position.pageNumber)
@@ -697,13 +689,13 @@ export class PdfHighlighter<T_HT extends IHighlight> extends PureComponent<
                   return;
                 }
 
-                let paginatedPageNumber = null;
-                if (page.number > this.props.pageSize){
-                  paginatedPageNumber = page.number - this.props.currentPage + 1;
-                }
-                else{
-                  paginatedPageNumber = page.number
-                }
+                // let paginatedPageNumber = null;
+                // if (page.number > this.props.pageSize){
+                //   paginatedPageNumber = page.number - this.props.currentPage + 1;
+                // }
+                // else{
+                //   paginatedPageNumber = page.number
+                // }
 
                 const pageBoundingRect = {
                   ...boundingRect,
@@ -761,7 +753,7 @@ export class PdfHighlighter<T_HT extends IHighlight> extends PureComponent<
   }
 
   private renderHighlightLayers() {
-    const { pdfDocument,  currentPage, pageSize, totalPageCount  } = this.props;
+    const {  currentPage, pageSize, totalPageCount  } = this.props;
 
     // Calculate the end page for the current batch
     const endPage = Math.min(currentPage + pageSize - 1, totalPageCount);
@@ -771,7 +763,7 @@ export class PdfHighlighter<T_HT extends IHighlight> extends PureComponent<
     console.log("highlightRoots: ", this.highlightRoots);
     for (let pageNumber =  currentPage; pageNumber <= currentPage+pageSize; pageNumber++) {
 
-      const cutPageNumber = pageNumber - currentPage + 1;
+      // const cutPageNumber = pageNumber - currentPage + 1;
       
       const highlightRoot = this.highlightRoots[pageNumber];
 

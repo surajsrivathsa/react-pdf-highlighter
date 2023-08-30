@@ -7,5 +7,5 @@
     "noEmit": true,
     "jsx": "react"
   },
-  "include": ["./src", "../src/components/PDFPageComponent.tsx"]
+  "include": ["./src"]
 }
