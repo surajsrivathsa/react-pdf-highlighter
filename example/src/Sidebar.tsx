@@ -23,7 +23,7 @@ const updateHash = (highlight: IHighlight) => {
   document.location.hash = `highlight-${highlight.id}`;
 };
 
-// declare const APP_VERSION: string = "1.0.0";
+const APP_VERSION: string = "1.0.0";
 
 export function Sidebar({
   highlights,
@@ -128,7 +128,7 @@ export function Sidebar({
 
 
         <h2 style={{ marginBottom: "1rem" }}>
-          react-pdf-highlighter 1.0.0
+          react-pdf-highlighter { APP_VERSION }
         </h2>
 
         <p style={{ fontSize: "0.7rem" }}>
