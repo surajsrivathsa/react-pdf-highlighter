@@ -30,7 +30,7 @@
     "format:check": "prettier --check './**/*.{js,ts,tsx}'",
     "clean": "rm -rf dist",
     "predeploy": "npm run build",
-    "deploy": "gh-pages -d dist"
+    "deploy": "gh-pages -d ./dist/esm"
   },
   "dependencies": {
     "@vitejs/plugin-react": "^4.0.4",
