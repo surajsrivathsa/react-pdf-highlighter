@@ -16,6 +16,11 @@ interface Props {
   pageSize: number;
 
   setPageBatch: (batchNumber: number) => void; // New prop to set the current batch number
+
+  onFindMatch: () => void;
+  setSearchText: (text: string) => void;
+  setContextString: (text: string) => void;
+  setWindowSize: (size: number) => void;
 }
 
 
@@ -40,7 +45,8 @@ export function Sidebar({
   currentPage,
   pageSize,
 
-  setPageBatch
+  setPageBatch,
+  onFindMatch, setSearchText, setContextString, setWindowSize
 }: Props) {
 
   // const handleAnnotationsSubmit = () => {
@@ -220,12 +226,21 @@ export function Sidebar({
             Forward
           </button>
       </div>
+
+      <div className="search-form">
+        <input type="text" placeholder="Search Text" onChange={(e) => setSearchText(e.target.value)} />
+        <input type="text" placeholder="Context" onChange={(e) => setContextString(e.target.value || '')} />
+        <input type="number" placeholder="Window Size" onChange={(e) => setWindowSize(Number(e.target.value) || 1)} />
+        <button onClick={onFindMatch}>Find Match</button>
+      </div>
       
 
       {/* handle pdf */} 
       <div style={{ padding: "1rem" }}>
           <input type="file" accept="application/pdf" onChange={handleFileUpload} />
       </div>
+
+
     </div>
   );
 }

@@ -14,6 +14,7 @@ import type { IHighlight, NewHighlight } from "./react-pdf-highlighter";
 import { testHighlights as _testHighlights } from "./test-highlights";
 import { Spinner } from "./Spinner";
 import { Sidebar } from "./Sidebar";
+import { searchPDF } from './PdfSearchService'; // Replace with your actual import
 
 // import  PDFUploader  from './PDFUploader';
 
@@ -33,6 +34,10 @@ interface State {
 
   // New state variable for keeping track of the current batch number
   currentBatch: number;
+
+  searchText: string;
+  contextString: string;
+  windowSize: number;
 }
 
 const getNextId = () => String(Math.random()).slice(2);
@@ -75,7 +80,11 @@ class App extends Component<{}, State> {
     currentPage: 1,
     pageSize: 20,
     totalPageCount: 0, // Initialize it after PDF load
-    currentBatch: 1
+    currentBatch: 1,
+    searchText: "search text",
+    contextString: "",
+    windowSize: 1,
+
   };
 
   // new functions to move between batch of pages
@@ -111,6 +120,33 @@ class App extends Component<{}, State> {
       currentPage: Math.max(prevState.currentPage - prevState.pageSize, 1),
       currentBatch: newBatchNumber
     }));
+  };
+
+  handleFindMatch = async () => {
+    try {
+      const { highlights, url, searchText, contextString, windowSize } = this.state;
+      const searchStringHighlights = await searchPDF(url, searchText, contextString, windowSize);
+      
+      console.log("searchStringHighlights: ", searchStringHighlights);
+
+
+      this.setState({highlights: [...highlights, ...searchStringHighlights] });
+
+    } catch (error) {
+      console.error(`Error finding match: ${error}`);
+    }
+  };
+
+  setSearchText = (text: string) => {
+    this.setState({ searchText: text });
+  };
+
+  setContextString = (context: string) => {
+    this.setState({ contextString: context });
+  };
+
+  setWindowSize = (size: number) => {
+    this.setState({ windowSize: size });
   };
 
 
@@ -210,7 +246,7 @@ class App extends Component<{}, State> {
   // changed stuff to handle pagination
 
   render() {
-    const { url, highlights, currentPage, pageSize, totalPageCount  } = this.state;
+    const { url, highlights, currentPage, pageSize, totalPageCount,  } = this.state;
     // // console.log("changed  url ", url, " pageSize: ", pageSize);
 
     return (
@@ -229,6 +265,10 @@ class App extends Component<{}, State> {
           currentPage={currentPage}
           pageSize={pageSize}
           setPageBatch={this.setPageBatch}
+          onFindMatch={this.handleFindMatch}
+          setSearchText={this.setSearchText}
+          setContextString={this.setContextString}
+          setWindowSize={this.setWindowSize}
           />
         <div
           style={{

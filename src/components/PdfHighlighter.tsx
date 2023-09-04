@@ -331,6 +331,15 @@ export class PdfHighlighter<T_HT extends IHighlight> extends PureComponent<
     }
     const viewport = this.viewer.getPageView(paginatedPageNumber - 1).viewport;
     // console.log("scaledPositionToViewport: ", pageNumber);
+    // console.log("xx: ", {
+    //   originalboundingrect: boundingRect,
+    //   boundingRect: scaledToViewport(boundingRect, viewport, usePdfCoordinates),
+    //   rects: (rects || []).map((rect) =>
+    //     scaledToViewport(rect, viewport, usePdfCoordinates)
+    //   ),
+    //   pageNumber,
+    //   usePdfCoordinates,
+    // });
     return {
       boundingRect: scaledToViewport(boundingRect, viewport, usePdfCoordinates),
       rects: (rects || []).map((rect) =>
