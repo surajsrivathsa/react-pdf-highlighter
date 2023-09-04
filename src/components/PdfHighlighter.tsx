@@ -762,7 +762,7 @@ export class PdfHighlighter<T_HT extends IHighlight> extends PureComponent<
   }
 
   private renderHighlightLayers() {
-    const {  currentPage, pageSize, totalPageCount  } = this.props;
+    const {  currentPage, pageSize  } = this.props;
 
     // Calculate the end page for the current batch
     //const endPage = Math.min(currentPage + pageSize - 1, totalPageCount);

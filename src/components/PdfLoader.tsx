@@ -123,7 +123,7 @@ export class PdfLoader extends Component<Props, State> {
   }
 
   render() {
-    const { children, beforeLoad, currentPage, pageSize } = this.props;
+    const { children, beforeLoad, } = this.props;
     const { pdfDocument, error } = this.state;
 
     //const endPage = currentPage + pageSize - 1;

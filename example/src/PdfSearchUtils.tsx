@@ -1,4 +1,4 @@
-import { PDFPageProxy } from 'pdfjs-dist';
+// import { PDFPageProxy } from 'pdfjs-dist';
 
 // ... (other imports and code)
 
