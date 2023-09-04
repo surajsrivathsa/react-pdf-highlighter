@@ -18,12 +18,34 @@ export const findMatchingIndices = (searchText: string, contextString: string, w
     const searchTextIndex = windowContent.indexOf(normalizedSearchText);
     const contextTextIndex = windowContent.indexOf(normalizedContextString);
     
+     
     if (searchTextIndex !== -1 && contextTextIndex !== -1) {
       if (lastMatchIndex < contextTextIndex + windowStart) {
         // Relative to the original content list, we would have to find the actual indices of these positions
-        resultPairs.push([windowStart, windowEnd]); 
+        let searchTextRealIdx = null;
+        let contextStringRealIdx = null;
+        for (let idx = windowStart; idx <= windowEnd; idx++){
+          let pdf_snippet = content[idx].str;
+          if (pdf_snippet.toLowerCase().indexOf(normalizedSearchText) !== -1 ){
+            searchTextRealIdx = idx;
+          }
+          else if (pdf_snippet.toLowerCase().indexOf(normalizedContextString) !== -1){
+            contextStringRealIdx = idx;
+          }
+          if ( searchTextRealIdx !== null && contextStringRealIdx !== null){
+            break;
+          }
+        }
+        if (searchTextRealIdx !== null && contextStringRealIdx !== null){
+          resultPairs.push([Math.min(searchTextRealIdx, contextStringRealIdx), Math.max(searchTextRealIdx, contextStringRealIdx)]);
+          console.log("real index array: ", [Math.min(searchTextRealIdx, contextStringRealIdx), Math.max(searchTextRealIdx, contextStringRealIdx)], searchTextIndex, contextTextIndex);
+        }
+        else{
+          resultPairs.push([windowStart, windowEnd]); 
+        }
+        
         lastMatchIndex = contextTextIndex + windowStart;
-        console.log(searchTextIndex, contextTextIndex);
+        console.log(searchTextIndex, contextTextIndex, resultPairs);
       }
     }
   }
