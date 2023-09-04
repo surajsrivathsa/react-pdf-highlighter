@@ -5,7 +5,8 @@
     "module": "ESNext",
     "lib": ["ESNext", "DOM"],
     "noEmit": true,
-    "jsx": "react"
+    "jsx": "react",
+    "downlevelIteration": true
   },
   "include": ["./src"]
 }
