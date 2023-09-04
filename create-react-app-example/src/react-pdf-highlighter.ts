@@ -1,1 +1,1 @@
-export * from "react-pdf-highlighter";
+export * from "../../src";

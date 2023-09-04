@@ -43,10 +43,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/agentcooper/react-pdf-highlighter.git"
+    "url": "git+https://github.com/surajsrivathsa/react-pdf-highlighter.git"
   },
   "bugs": {
-    "url": "https://github.com/agentcooper/react-pdf-highlighter/issues"
+    "url": "https://github.com/surajsrivathsa/react-pdf-highlighter/issues"
   },
   "devDependencies": {
     "@types/lodash.debounce": "^4.0.6",
