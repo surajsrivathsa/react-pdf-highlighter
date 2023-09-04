@@ -81,7 +81,7 @@ export const PdfSearchIndividualPage = async (page: PDFPageProxy, searchText: st
     max_X = Math.max(tstartObjBoundingRect.x2, max_X);
 
   }
-  let pageWidth = max_X - min_X;
+  //let pageWidth = max_X - min_X;
 
   for (let idx = 0; idx < matchingIndices.length; idx++) 
   {
