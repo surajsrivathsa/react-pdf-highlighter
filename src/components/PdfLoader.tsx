@@ -126,7 +126,7 @@ export class PdfLoader extends Component<Props, State> {
     const { children, beforeLoad, currentPage, pageSize } = this.props;
     const { pdfDocument, error } = this.state;
 
-    const endPage = currentPage + pageSize - 1;
+    //const endPage = currentPage + pageSize - 1;
 
     // find last page
     // if (pdfDocument !== null){
