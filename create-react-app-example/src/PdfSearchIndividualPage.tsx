@@ -112,7 +112,7 @@ export const PdfSearchIndividualPage = async (page: PDFPageProxy, searchText: st
             content: {text: searchText} ,
             position: {
                 boundingRect: boundingRectModified,
-                rects: [boundingRectModified], //[startObjBoundingRect, endObjBoundingRect],
+                rects: [startObjBoundingRect, endObjBoundingRect], //[boundingRectModified], //
                 pageNumber: page.pageNumber
             },
             comment: {
