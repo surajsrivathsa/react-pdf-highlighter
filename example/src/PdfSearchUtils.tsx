@@ -83,5 +83,30 @@ export const calculateBoundingBox = (startObj: any, endObj: any, pdfViewportObj:
   return [startObjBoundingRect, endObjBoundingRect, boundingRectModified];
 };
 
-// ... (rest of your code)
+export const calculateBoundingBoxForSingleText = (startObj: any,  pdfViewportObj: any, min_X: number, max_X: number) => {
+  const startX = startObj.transform[4] + 1;
+  const startY = startObj.transform[5] ;
+
+  const viewportStartObj = pdfViewportObj.convertToViewportPoint(startX, startY);
+
+  const startObjBoundingRect = {
+    x1: viewportStartObj[0],
+    y1: viewportStartObj[1] - 8,
+    x2: viewportStartObj[0] + startObj.width + 5,
+    y2: viewportStartObj[1] + 2,
+    width: pdfViewportObj.width,
+    height: pdfViewportObj.height,
+  };
+
+  const boundingRectModified = {
+    x1: min_X, //Math.min(startObjBoundingRect.x1, endObjBoundingRect.x1),
+    y1: Math.min(startObjBoundingRect.y1, 9)-7,
+    x2: max_X-50, //Math.max(startObjBoundingRect.x2, endObjBoundingRect.x2),
+    y2: Math.max(startObjBoundingRect.y2, 9)+7,
+    width: pdfViewportObj.width,
+    height: pdfViewportObj.height,
+  };
+
+  return [startObjBoundingRect, boundingRectModified];
+};
 

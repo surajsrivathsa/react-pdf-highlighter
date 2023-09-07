@@ -1,6 +1,6 @@
 import { PDFPageProxy } from 'pdfjs-dist';
-import { calculateBoundingBox, calculateBoundingBoxSlice } from './PdfSearchUtils';
-import { findMatchingIndices } from "./findMatchingText";
+import { calculateBoundingBox, calculateBoundingBoxSlice, calculateBoundingBoxForSingleText } from './PdfSearchUtils';
+import { findMatchingIndices, findMatchingIndicesOnlySearchText } from "./findMatchingText";
 
 
 export interface HighlightObject {
@@ -123,6 +123,81 @@ export const PdfSearchIndividualPage = async (page: PDFPageProxy, searchText: st
             id: getNextId()
             };
     if (startObjBoundingRect !== null && endObjBoundingRect !== null && startObj !== null && endObj !== null){
+      searchHighlights.push(highlight);
+    }
+    
+  }
+
+  return searchHighlights;
+};
+
+
+
+export const PdfSearchIndividualPagewithSearchText = async (page: PDFPageProxy, searchText: string ): Promise<SearchHighlights> => {
+  const content: any = await page.getTextContent();
+  const searchHighlights: SearchHighlights = [];
+
+  let matchingIndices = findMatchingIndicesOnlySearchText( searchText, content.items);
+  let startIndex = null;
+  let startObj = null;
+
+  console.log("matchingIndices: ", matchingIndices);
+  // console.log(content.items.slice(0,100));
+
+  const pdfViewportObj = page.getViewport({ scale: 1.0, rotation: 0 });
+  let min_X = 720;
+  let max_X = 0;
+
+  for (let idx=0; idx < Math.min(25, content.items.length) ; idx++)
+  {
+
+    let tstartObj = content.items[idx];
+    // let tendObj = content.items[idx+1];
+
+    const tboundingRectArray = calculateBoundingBoxSlice(tstartObj, tstartObj, pdfViewportObj); 
+
+    const tstartObjBoundingRect = tboundingRectArray[0];
+    // const tendObjBoundingRect = tboundingRectArray[1];
+    // const tboundingRectModified = tboundingRectArray[2];
+
+    min_X = Math.min(tstartObjBoundingRect.x1, min_X);
+    max_X = Math.max(tstartObjBoundingRect.x2, max_X);
+
+  }
+  //let pageWidth = max_X - min_X;
+
+  for (let idx = 0; idx < matchingIndices.length; idx++) 
+  {
+    startIndex = matchingIndices[idx];
+    console.log("Content Item Length: ", content.items.length);
+
+    startObj = content.items[startIndex.valueOf()];
+    console.log("startObj: ", startObj, " startIndex: ", startIndex.valueOf());
+    console.log("contents array withing 10 window: ", content.items.slice(Math.max(0, startIndex.valueOf()-10), 
+                Math.min(startIndex.valueOf()+10, content.items.length)));
+    console.log("page viewport: ", pdfViewportObj, " page view: ", page.view);
+
+    const boundingRectArray = calculateBoundingBoxForSingleText(startObj,  pdfViewportObj, min_X, max_X); 
+    const startObjBoundingRect = boundingRectArray[0];
+    const boundingRectModified = boundingRectArray[1];
+
+    console.log("boundingRectArray: ", boundingRectArray, " startObjBoundingRect: ", startObjBoundingRect);
+
+    const highlight: HighlightObject = {
+            content: {text: searchText} ,
+            position: {
+                boundingRect: boundingRectModified,
+                rects: [startObjBoundingRect], //[boundingRectModified], //
+                pageNumber: page.pageNumber
+            },
+            comment: {
+                text: `search - ${searchText}`,
+                emoji: ""
+            },
+            pageNumber: page.pageNumber,
+            id: getNextId()
+            };
+    if (startObjBoundingRect !== null && startObj !== null ){
       searchHighlights.push(highlight);
     }
     

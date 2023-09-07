@@ -53,44 +53,29 @@ export const findMatchingIndices = (searchText: string, contextString: string, w
   return resultPairs;
 };
 
-// export const findMatchingIndices = (searchText: string, contextString: string, windowSize: number, fullPageContent: string, content: any): IndexPair[] => {
-//   // Convert all text into lower case
-//   const normalizedContent = fullPageContent.toLowerCase().split(/\s+/);
+export const findMatchingIndicesOnlySearchText = (searchText: string,  content: Array<any> ): Number[] => {
+  // Convert all text into lower case
+  let normalizedSearchText = searchText.toLowerCase();
+  let normalizedContent = content.map((item: { str: string }) => item.str).join(' ').toLowerCase();
+  
+  let matchedIndexList: Number[] = [];
 
-//   if (normalizedContent.length < windowSize) {
-//     windowSize = Math.ceil(normalizedContent.length/4);
-//     console.log("changed window size: ", windowSize);
-//   }
+  const searchTextIndex = normalizedContent.indexOf(normalizedSearchText);
+    
+  if (searchTextIndex !== -1 ) {
 
-//   const normalizedSearchText = searchText.toLowerCase().split(/\s+/);
-//   const normalizedContextString = contextString.toLowerCase().split(/\s+/);
+    for (let i = 0; i < content.length; i++ )
+    {
+      if (content[i].str.toLowerCase().indexOf(normalizedSearchText) !== -1)
+      {
+        matchedIndexList.push(i)
+      }
+    }    
+  }
+  normalizedContent = '';
 
-//   let resultPairs: IndexPair[] = [];
-//   let lastMatchIndex = -1;
-
-//   normalizedContent.forEach((word, idx) => {
-//     let windowStart = Math.max(0, idx - windowSize);
-//     let windowEnd = Math.min(normalizedContent.length, idx + windowSize);
-//     const windowWords = normalizedContent.slice(windowStart, windowEnd);
-
-//     if (windowWords.join(' ').includes(normalizedSearchText.join(' '))) {
-//       if (windowWords.join(' ').includes(normalizedContextString.join(' '))) {
-//         const searchStartIdx = windowWords.indexOf(normalizedSearchText[0]);
-//         const contextStartIdx = windowWords.indexOf(normalizedContextString[0]);
-
-//         if (searchStartIdx !== -1 && contextStartIdx !== -1 && lastMatchIndex < contextStartIdx + windowStart) {
-//           resultPairs.push([searchStartIdx + windowStart, contextStartIdx + windowStart]);
-//           lastMatchIndex = contextStartIdx + windowStart;
-//         }
-//       }
-//     }
-//   });
-
-
-
-//   return resultPairs;
-// };
-
+  return matchedIndexList;
+};
 
 
 // Example usage

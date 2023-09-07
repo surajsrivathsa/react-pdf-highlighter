@@ -1,5 +1,6 @@
 import React from "react";
 import type { IHighlight } from "./react-pdf-highlighter";
+import axios from 'axios';
 
 interface Props {
   highlights: Array<IHighlight>;
@@ -21,7 +22,28 @@ interface Props {
   setSearchText: (text: string) => void;
   setContextString: (text: string) => void;
   setWindowSize: (size: number) => void;
+  handleJsonData: (jsonData: any) => void;
 }
+
+type Substance = {
+  token: string;
+  tokenIdxOnPage: number;
+  chebi_ids: string[];
+};
+
+type PageList = {
+  pageNumber: number;
+  substances: Substance[];
+};
+
+type JSONData = {
+  filepath: string;
+  filehash: string;
+  texthash: string;
+  contenthash: string;
+  pages_list: PageList[];
+};
+
 
 
 const updateHash = (highlight: IHighlight) => {
@@ -46,7 +68,7 @@ export function Sidebar({
   pageSize,
 
   setPageBatch,
-  onFindMatch, setSearchText, setContextString, setWindowSize
+  onFindMatch, setSearchText, setContextString, setWindowSize, handleJsonData
 }: Props) {
 
   // const handleAnnotationsSubmit = () => {
@@ -61,6 +83,86 @@ export function Sidebar({
       uploadPdf(file); // Call the function to upload the PDF
     }
   };
+
+  type Substance = {
+  token: string;
+  tokenIdxOnPage: number;
+  chebi_ids: string[];
+};
+
+type PageList = {
+  pageNumber: number;
+  substances: Substance[];
+};
+
+type JSONData = {
+  filepath: string;
+  filehash: string;
+  texthash: string;
+  contenthash: string;
+  pages_list: PageList[];
+};
+
+  const getUniqueKeywordsPerPage = (inputJson: JSONData): JSONData => {
+    const { pages_list, ...otherKeys } = inputJson;
+
+    const uniquePagesList: PageList[] = pages_list.reduce((acc: PageList[], currentPage: PageList) => {
+      const existingPage = acc.find(page => page.pageNumber === currentPage.pageNumber);
+
+      if (existingPage) {
+        currentPage.substances.forEach(substance => {
+          if (!existingPage.substances.some(existingSubstance => existingSubstance.token === substance.token)) {
+            existingPage.substances.push(substance);
+          }
+        });
+      } else {
+        const uniqueSubstances = currentPage.substances.reduce((uniqueSubs: Substance[], currSub: Substance) => {
+          if (!uniqueSubs.some(sub => sub.token === currSub.token)) {
+            uniqueSubs.push(currSub);
+          }
+          return uniqueSubs;
+        }, []);
+
+        acc.push({ pageNumber: currentPage.pageNumber, substances: uniqueSubstances });
+      }
+
+      return acc;
+    }, []);
+
+    return {
+      ...otherKeys,
+      pages_list: uniquePagesList
+    };
+  };
+
+
+
+  // handle manual json upload
+  // Add this function to upload JSON
+  const handleJsonUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+          const jsonData = JSON.parse(e.target?.result as string);
+
+          const uniqueKeywordsJsonData = getUniqueKeywordsPerPage(jsonData);
+          // console.log("uniqueKeywordsJsonData: ", uniqueKeywordsJsonData);
+          handleJsonData(uniqueKeywordsJsonData); // Pass to App.tsx
+          
+          // Optionally, send JSON data to backend
+          // try {
+          //   const response = await axios.post('/backend/upload_keywords', jsonData);
+          //   // Handle success
+          //   console.log(response.data);
+          // } catch (error) {
+          //   // Handle error
+          //   console.error(error);
+          // }
+        };
+        reader.readAsText(file);
+      }
+    };
 
   const calculateBatchNumber = (pageNumber: number): number => {
     return Math.ceil(pageNumber / pageSize) ;
@@ -236,9 +338,20 @@ export function Sidebar({
       
 
       {/* handle pdf */} 
+
       <div style={{ padding: "1rem" }}>
+        <div style={{ marginBottom: "1rem" }}>
+          <label>Upload PDF:</label>
           <input type="file" accept="application/pdf" onChange={handleFileUpload} />
+        </div>
+        
+        <div>
+          <label>Upload Keywords JSON:</label>
+          <input type
+          ="file" accept="application/JSON" onChange={handleJsonUpload} />
+        </div>
       </div>
+
 
 
     </div>

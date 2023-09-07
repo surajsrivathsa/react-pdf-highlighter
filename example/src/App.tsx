@@ -1,4 +1,5 @@
 import React, { Component } from "react";
+import axios from 'axios';
 
 import {
   PdfLoader,
@@ -14,7 +15,8 @@ import type { IHighlight, NewHighlight } from "./react-pdf-highlighter";
 import { testHighlights as _testHighlights } from "./test-highlights";
 import { Spinner } from "./Spinner";
 import { Sidebar } from "./Sidebar";
-import { searchPDF } from './PdfSearchService'; // Replace with your actual import
+import { searchPDF, searchPDFPage } from './PdfSearchService'; // Replace with your actual import
+import { getKeywordsFromBackend } from "./BackendService";
 
 // import  PDFUploader  from './PDFUploader';
 
@@ -186,6 +188,41 @@ class App extends Component<{}, State> {
     reader.readAsDataURL(file);
   };
 
+  // Add this function to handle JSON data and search
+  handleJsonData = async (jsonData: any) => {
+    try {
+      console.log("jsonData: ", jsonData);
+      const { highlights, url } = this.state;
+      const searchStringHighlightsfromJSON = await searchPDFPage(url, jsonData.pages_list);
+      // console.log("searchStringHighlightsfromJSON: ", searchStringHighlightsfromJSON);
+      this.setState({ highlights: [...highlights, ...searchStringHighlightsfromJSON] });
+    }
+    catch (error) {
+      console.error(`Error finding match: ${error}`);
+    }
+  };
+
+  // Make the API call and handle the received data
+  fetchAndSearchKeywords = async () => {
+    const jsonData = await getKeywordsFromBackend();
+    if (jsonData) {
+      this.handleJsonData(jsonData);
+    }
+  };
+
+  // Fetch keywords from backend
+  fetchKeywords = async () => {
+    try {
+      const response = await axios.get('/backend/find_relevant_keywords');
+      const jsonData = response.data; // Assuming data format is JSON
+      this.handleJsonData(jsonData);
+    } catch (error) {
+      // Handle error
+      console.error(error);
+    }
+  };
+
+
   scrollViewerTo = (highlight: any) => {};
 
   scrollToHighlightFromHash = () => {
@@ -269,6 +306,7 @@ class App extends Component<{}, State> {
           setSearchText={this.setSearchText}
           setContextString={this.setContextString}
           setWindowSize={this.setWindowSize}
+          handleJsonData={this.handleJsonData}
           />
         <div
           style={{
@@ -376,111 +414,3 @@ class App extends Component<{}, State> {
 }
 
 export default App;
-
-
-
- // render() {
-  //   const { url, highlights } = this.state;
-  //   // console.log("changed  url ", url);
-
-  //   return (
-  //     <div className="App" style={{ display: "flex", height: "100vh" }}>
-  //       {/* <PDFUploader onFileUpload={this.handleFileUpload} /> */}
-  //       <Sidebar
-  //         highlights={highlights}
-  //         resetHighlights={this.resetHighlights}
-  //         toggleDocument={this.toggleDocument}
-  //         submitAnnotations={this.handleSubmitAnnotations}
-  //         uploadPdf={this.uploadPdf} onNextPageBatch={function (): void {
-  //           throw new Error("Function not implemented.");
-  //         } } onPrevPageBatch={function (): void {
-  //           throw new Error("Function not implemented.");
-  //         } } disableNext={false} disablePrev={false}        />
-  //       <div
-  //         style={{
-  //           height: "100vh",
-  //           width: "75vw",
-  //           position: "relative",
-  //         }}
-  //       >
-  //         <PdfLoader url={url} beforeLoad={<Spinner />}  >
-  //           {(pdfDocument) => (
-  //             <PdfHighlighter
-  //               pdfDocument={pdfDocument}
-  //               enableAreaSelection={(event) => event.altKey}
-  //               onScrollChange={resetHash}
-  //               // pdfScaleValue="page-width"
-  //               scrollRef={(scrollTo) => {
-  //                 this.scrollViewerTo = scrollTo;
-
-  //                 this.scrollToHighlightFromHash();
-  //               }}
-  //               onSelectionFinished={(
-  //                 position,
-  //                 content,
-  //                 hideTipAndSelection,
-  //                 transformSelection
-  //               ) => (
-  //                 <Tip
-  //                   onOpen={transformSelection}
-  //                   onConfirm={(comment) => {
-  //                     this.addHighlight({ content, position, comment });
-
-  //                     hideTipAndSelection();
-  //                   }}
-  //                 />
-  //               )}
-  //               highlightTransform={(
-  //                 highlight,
-  //                 index,
-  //                 setTip,
-  //                 hideTip,
-  //                 viewportToScaled,
-  //                 screenshot,
-  //                 isScrolledTo
-  //               ) => {
-  //                 const isTextHighlight = !Boolean(
-  //                   highlight.content && highlight.content.image
-  //                 );
-
-  //                 const component = isTextHighlight ? (
-  //                   <Highlight
-  //                     isScrolledTo={isScrolledTo}
-  //                     position={highlight.position}
-  //                     comment={highlight.comment}
-  //                   />
-  //                 ) : (
-  //                   <AreaHighlight
-  //                     isScrolledTo={isScrolledTo}
-  //                     highlight={highlight}
-  //                     onChange={(boundingRect) => {
-  //                       this.updateHighlight(
-  //                         highlight.id,
-  //                         { boundingRect: viewportToScaled(boundingRect) },
-  //                         { image: screenshot(boundingRect) }
-  //                       );
-  //                     }}
-  //                   />
-  //                 );
-
-  //                 return (
-  //                   <Popup
-  //                     popupContent={<HighlightPopup {...highlight} />}
-  //                     onMouseOver={(popupContent) =>
-  //                       setTip(highlight, (highlight) => popupContent)
-  //                     }
-  //                     onMouseOut={hideTip}
-  //                     key={index}
-  //                     children={component}
-  //                   />
-  //                 );
-  //               }}
-  //               highlights={highlights}
-  //             />
-  //           )}
-  //         </PdfLoader>
-  //       </div>
-  //     </div>
-  //   );
-  // }
-
